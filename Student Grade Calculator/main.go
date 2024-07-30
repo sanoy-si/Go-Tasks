@@ -1,20 +1,61 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+)
+
+var scanner = bufio.NewScanner(os.Stdin) 
+
+func recieveInt(inputText string) int64{
+	fmt.Print(inputText)
+	scanner.Scan()
+	input := scanner.Text()
+	value, err := strconv.ParseInt(input, 10, 64)
+
+	for err != nil{
+		fmt.Print("Please Enter a vaild integer input: ")
+		scanner.Scan()
+		input := scanner.Text()
+		value, err = strconv.ParseInt(input, 10, 32)
+
+	}
+
+	return value
+}
+
+func recieveFloat(inputText string) float64{
+	fmt.Print(inputText)
+	scanner.Scan()
+	input := scanner.Text()
+	value, err := strconv.ParseFloat(input, 32)
+ 
+	for err != nil{
+		fmt.Print("Please Enter a vaild foat input: ")
+		scanner.Scan()
+		input := scanner.Text()
+		value, err = strconv.ParseFloat(input, 32)
+
+	}
+
+	return value
+}
 
 
-func validateScore(score float32) string{
+func validateScore(score float64) string{
 	if score > 100{
-		return "A score cannot be greater than a 100. Please enter a valid score."
+		return "A score cannot be greater than a 100. Please enter a valid score: "
 	}else if score < 0{
-		return "A score cannot be less than 0. Please enter a valid score."
+		return "A score cannot be less than 0. Please enter a valid score: "
 	}else{
 		return "Course added successfully."
 	}
 }
 
-func calculatTotal(scores map[string]float32) float32{
-	var total float32
+func calculatTotal(scores map[string]float64) float64{
+	var total float64
 	for _, score := range scores{
 		total += score
 	}
@@ -22,11 +63,11 @@ func calculatTotal(scores map[string]float32) float32{
 	return total
 }
 
-func calculateAverage(total float32, numberOfCourses int) float32{
-	return total / float32(numberOfCourses)
+func calculateAverage(total float64, numberOfCourses int) float64{
+	return total / float64(numberOfCourses)
 }
 
-func calculateGrade(averageScore float32) string{
+func calculateGrade(averageScore float64) string{
 	switch {
 		case averageScore >= 90:
 			return "A+"
@@ -68,43 +109,40 @@ func main(){
 	fmt.Println("Welcome To Student Grade Calculator")
 	
 	var(
-		firstName string
-		lastName string
+		name string
 		numberOfCourses int
-		scores = map[string]float32{}
+		scores = map[string]float64{}
 	)
+
 	
 
-	fmt.Println("Enter Your First Name:")
-	fmt.Scan(&firstName)
+	fmt.Print("Enter Your Name: ")
+	scanner.Scan()
+	name = scanner.Text()
 
-	fmt.Println("\nEnter Your Last Name:")
-	fmt.Scan(&lastName)
-
-	fmt.Printf("\nHello %v, How many courses did you take?\n", firstName)
-	fmt.Scan(&numberOfCourses)
+	numberOfCourses = int(recieveInt(fmt.Sprintf("\nHello %v, How many courses did you take?\n", name)))
 
 	for i := 1; i <= numberOfCourses; i++{
 		var courseName string
-		var score float32
+		var score float64
 
 		fmt.Printf("\nWhat is the name of the #%v course you took?\n", i)
-		fmt.Scan((&courseName))
+		scanner.Scan()
+		courseName = scanner.Text()
 
 		value, exist := scores[courseName]
 		for exist {
 			fmt.Printf("\nCourse name %v already added with a score of %v. Please Enter another course.\n", courseName, value) 
-			fmt.Scan((&courseName))
+			scanner.Scan()
+			courseName = scanner.Text()
 			value, exist = scores[courseName]
 		}
 
-		fmt.Printf("\nHow much did you get in %v?(Out of 100)\n", courseName)
-		fmt.Scan(&score)
+		score = recieveFloat(fmt.Sprintf("\nHow much did you get in %v?(Out of 100)\n", courseName))
 		
 		message := validateScore(score)
 		for message != "Course added successfully."{
-			fmt.Println(message)
-			fmt.Scan(&score)
+			score = recieveFloat(message)
 			message = validateScore(score)
 		} 
 		scores[courseName] = score
