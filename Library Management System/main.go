@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "Library_Management_System/controllers"
 
 func main(){
-	fmt.Println("Hello World!")
+	controllers.Welcome()
 }
