@@ -7,29 +7,31 @@ import (
 
 type LibraryManager interface {
 	AddBook(book models.Book)
-	RemoveBook(bookID int)
-	BorrowBook(bookID int, memberID int) error
-	ReturnBook(bookID int, memberID int) error
+	RemoveBook(bookID int64)
+	BorrowBook(bookID int64, memberID int64) error
+	ReturnBook(bookID int64, memberID int64) error
 	ListAvailableBooks() []models.Book
-	ListBorrowedBooks(memberID int) []models.Book
+	ListBorrowedBooks(memberID int64) []models.Book
 }
 
 type Library struct {
-	Books   map[int]models.Book
-	Members map[int]models.Member
+	Books   map[int64]models.Book
+	Members map[int64]models.Member
+}
+
+func (library *Library) AddMember(member models.Member){
+	library.Members[member.ID] = member
 }
 
 func (library *Library) AddBook(book models.Book) {
 	library.Books[book.ID] = book
-	book.Status = "Available"
-
 }
 
-func (library *Library) RemoveBook(bookID int) {
+func (library *Library) RemoveBook(bookID int64) {
 	delete(library.Books, bookID)
 }
 
-func(library *Library) BorrowBook(bookId int, memberID int) error{
+func(library *Library) BorrowBook(bookId int64, memberID int64) error{
 	book, bookExists := library.Books[bookId]
 	member, memberExists := library.Members[memberID]
 
@@ -46,13 +48,15 @@ func(library *Library) BorrowBook(bookId int, memberID int) error{
 	}
 
 	book.Status = "Borrowed"
+	library.Books[bookId] = book
 	member.BorrowedBooks = append(member.BorrowedBooks, book)
+	library.Members[memberID] = member
 	return nil
 
 } 
 
 
-func(library *Library) ReturnBook(bookId int, memberID int) error{
+func(library *Library) ReturnBook(bookId int64, memberID int64) error{
 	book, bookExists := library.Books[bookId]
 	member, memberExists := library.Members[memberID]
 
@@ -77,6 +81,8 @@ func(library *Library) ReturnBook(bookId int, memberID int) error{
 
 	book.Status = "Available"
 	member.BorrowedBooks = append(member.BorrowedBooks[:bookIndex], member.BorrowedBooks[bookIndex + 1:]...)
+	library.Books[bookId] = book
+	library.Members[memberID] = member
 	return nil
 
 }
@@ -94,7 +100,7 @@ func (library *Library) ListAvailableBooks() []models.Book{
 }
 
 
-func (library *Library) ListBorrowedBooks(memberID int) []models.Book{
+func (library *Library) ListBorrowedBooks(memberID int64) []models.Book{
 	member := library.Members[memberID]
 	return member.BorrowedBooks
 }
