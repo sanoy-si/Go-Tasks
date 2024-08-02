@@ -3,25 +3,26 @@ package data
 import (
 	"Task_Management_System/models"
 	"errors"
+	"strconv"
 )
 
 type TaskMangemetService interface{
 	GetTasks() []models.Task
-	GetTask(id int) (models.Task, error)
+	GetTask(id string) (models.Task, error)
 	CreateTask(newTask models.Task) models.Task
-	UpdateTask(id int, updatedTask models.Task) (models.Task, error)
-	DeleteTask(id int) error
+	UpdateTask(id string, updatedTask models.Task) (models.Task, error)
+	DeleteTask(id string) error
 }
 
 type inMemoryTaskManagementService struct{
-	tasks map[int]models.Task
-	currentId int
+	tasks map[string]models.Task
+	currentId string
 }
 
 func NewInMemoryTaskManagementService() *inMemoryTaskManagementService{
 	return &inMemoryTaskManagementService{
-		tasks: make(map[int]models.Task),
-		currentId: 1,
+		tasks: make(map[string]models.Task),
+		currentId: "1",
 	}
 }
 
@@ -33,7 +34,7 @@ func (service *inMemoryTaskManagementService) GetTasks() []models.Task{
 	return allTasks
 }
 
-func (service *inMemoryTaskManagementService) GetTask(id int) (models.Task, error){
+func (service *inMemoryTaskManagementService) GetTask(id string) (models.Task, error){
 	task, exists := service.tasks[id]
 
 	if !exists{
@@ -45,11 +46,12 @@ func (service *inMemoryTaskManagementService) GetTask(id int) (models.Task, erro
 
 func (service *inMemoryTaskManagementService) CreateTask(newTask models.Task) models.Task{
 	newTask.ID = service.currentId
-	service.currentId += 1
+	curentId, _ := strconv.Atoi(service.currentId)
+	service.currentId = strconv.Itoa(curentId + 1)
 	return newTask
 }
 
-func (service *inMemoryTaskManagementService) UpdateTask(id int, updatedTask models.Task) (models.Task, error){
+func (service *inMemoryTaskManagementService) UpdateTask(id string, updatedTask models.Task) (models.Task, error){
 	_, err := service.GetTask(id)
 	if err != nil{
 		return models.Task{}, err
@@ -61,7 +63,7 @@ func (service *inMemoryTaskManagementService) UpdateTask(id int, updatedTask mod
 	return updatedTask, nil
 }
 
-func (service *inMemoryTaskManagementService) DeleteTask(id int) error{
+func (service *inMemoryTaskManagementService) DeleteTask(id string) error{
 	_, exists := service.tasks[id]
 
 	if !exists{
