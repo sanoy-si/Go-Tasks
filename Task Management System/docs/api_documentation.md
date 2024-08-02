@@ -2,24 +2,6 @@
 The Task Manager API is a RESTful API that allows users to manage tasks. The API provides endpoints that can be used to perform the CRUD operations.
 
 
-# Running the API
-- Clone the repository
-```sh 
-    git clone https://github.com/sanoy-si/Go-Tasks.git
-```
-- Navigate to the project directory
-```sh
-    cd Go-Tasks/"Task Management System
-```
-- Install dependencies
-```sh
- go mod tidy  
-```
-- Run the main.go file.
-```sh
-go run .
-```
-# End Points
 ## End-point: Get Tasks
 This end point returns a list of all tasks that has been added so far.
 
