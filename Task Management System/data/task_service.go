@@ -46,6 +46,7 @@ func (service *inMemoryTaskManagementService) GetTask(id string) (models.Task, e
 
 func (service *inMemoryTaskManagementService) CreateTask(newTask models.Task) models.Task{
 	newTask.ID = service.currentId
+	service.tasks[service.currentId] = newTask
 	curentId, _ := strconv.Atoi(service.currentId)
 	service.currentId = strconv.Itoa(curentId + 1)
 	return newTask
