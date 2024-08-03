@@ -36,7 +36,7 @@ func CreateTask(service data.TaskMangemetService) gin.HandlerFunc{
 
 			newTask = service.CreateTask(newTask)
 			
-			c.IndentedJSON(http.StatusOK, newTask)
+			c.IndentedJSON(http.StatusCreated, newTask)
 		}
 	
 }
