@@ -24,7 +24,7 @@ type TaskMangemetService interface{
 
 type PersistentTaskManagementService struct{
 	client *mongo.Client
-	currentId string
+
 }
 
 func NewPersistentTaskManagementService() *PersistentTaskManagementService{
@@ -37,7 +37,6 @@ func NewPersistentTaskManagementService() *PersistentTaskManagementService{
 
 	return &PersistentTaskManagementService{
 		client: client,
-		currentId: "1",
 	}
 }
 
@@ -90,19 +89,19 @@ func (service *PersistentTaskManagementService) CreateTask(newTask models.Task) 
 	if err != nil{
 		log.Fatal(err)
 	}
-
+	count, err := collection.CountDocuments(context.TODO(), bson.M{})
+	if err != nil{
+		log.Fatal(err)
+	}
 	filter := bson.M{"_id": insertResult.InsertedID}
-	update := bson.M{"$set": bson.M{"id": service.currentId}}
+	update := bson.M{"$set": bson.M{"id": strconv.Itoa(int(count))}}
 	
 	_, err = collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil{
 		log.Fatal(err)
 	}
-	newTask.ID = service.currentId
 	
-	currentId, _ := strconv.Atoi(service.currentId)
-	service.currentId = strconv.Itoa(currentId + 1)
-
+	newTask.ID = strconv.Itoa(int(count))
 	return newTask
 }
 
