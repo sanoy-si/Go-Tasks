@@ -30,7 +30,7 @@ go get go.mongodb.org/mongo-driver
 ```
 - Navigate to the project directory
 ```sh
-    cd Go-Tasks/"Task Management System
+    cd Go-Tasks/"Task Management System with MongoDb"
 ```
 - Install dependencies
 ```sh
