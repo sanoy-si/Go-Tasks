@@ -1,19 +1,22 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
+	"Task_Management_System_with_JWT/data"
+	"Task_Management_System_with_JWT/models"
 	"net/http"
-	"Task_Management_System/data"
-	"Task_Management_System/models"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
-func GetTasks(service data.TaskMangemetService) gin.HandlerFunc{
+var validate = validator.New()
+func GetTasks(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
 		c.IndentedJSON(http.StatusOK, service.GetTasks())
 	}
 }
 
-func GetTask(service data.TaskMangemetService) gin.HandlerFunc{
+func GetTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
 			id := c.Param("id")
 			task, err := service.GetTask(id)
@@ -27,7 +30,7 @@ func GetTask(service data.TaskMangemetService) gin.HandlerFunc{
 			}
 }
 
-func CreateTask(service data.TaskMangemetService) gin.HandlerFunc{
+func CreateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
 			var newTask models.Task
 			if err := c.BindJSON(&newTask); err != nil{
@@ -41,7 +44,7 @@ func CreateTask(service data.TaskMangemetService) gin.HandlerFunc{
 	
 }
 
-func UpdateTask(service data.TaskMangemetService) gin.HandlerFunc{
+func UpdateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
 			var updatedTask models.Task
 			
@@ -64,7 +67,7 @@ func UpdateTask(service data.TaskMangemetService) gin.HandlerFunc{
 }
 
 
-func DeleteTask(service data.TaskMangemetService) gin.HandlerFunc{
+func DeleteTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func (c *gin.Context){
 			id := c.Param("id")
 			if err := service.DeleteTask(id); err != nil{
@@ -77,3 +80,31 @@ func DeleteTask(service data.TaskMangemetService) gin.HandlerFunc{
 }
 
 
+func Register(service *data.PersistentTaskManagementService) gin.HandlerFunc{
+	return func(c *gin.Context){
+
+		var newUser models.User
+		if err := c.BindJSON(&newUser); err != nil{
+			return
+		}
+		
+		if err := validate.Struct(newUser); err != nil{
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error":err.Error()})
+			return
+		}
+
+
+		insertedId, err :=  service.Register(newUser)
+		if err != nil{
+			if err.Error() == "email already exists"{
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"error":err.Error()})
+				return
+			}
+			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
+			return
+		}
+
+		c.IndentedJSON(http.StatusCreated, gin.H{"insertedID":insertedId})
+	}
+
+}

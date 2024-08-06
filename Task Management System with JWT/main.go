@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"Task_Management_System/router"
-	"Task_Management_System/data"
+	"Task_Management_System_with_JWT/router"
+	"Task_Management_System_with_JWT/data"
 )
 
 func main(){
