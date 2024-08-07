@@ -3,6 +3,8 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"time"
+
 	// "os"
 	"strings"
 
@@ -43,6 +45,21 @@ func AuthMiddleware() gin.HandlerFunc{
 
 		}
 
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok{
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error":"Invalid JWT"})
+			c.Abort()
+			return
+		}
+
+		if claims["expires_at"].(float64) < float64(time.Now().Local().Unix()){
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error":"token expired"})
+			c.Abort()
+			return
+		}
+
+		c.Set("is_admin",claims["is_admin"])
 
 		c.Next()
 	}
