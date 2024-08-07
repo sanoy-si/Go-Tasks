@@ -32,6 +32,18 @@ func GetTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 
 func CreateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
+			is_admin, ok := c.Value("is_admin").(bool)
+			
+			if !ok{
+				c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":"unassigned context"})
+				return
+			}
+
+			if !is_admin{
+				c.IndentedJSON(http.StatusForbidden, gin.H{"error":"allowed for admins only"})
+				return
+			}
+			
 			var newTask models.Task
 			if err := c.BindJSON(&newTask); err != nil{
 				return
@@ -46,6 +58,19 @@ func CreateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 
 func UpdateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
+			is_admin, ok := c.Value("is_admin").(bool)
+				
+			if !ok{
+				c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":"unassigned context"})
+				return
+			}
+
+			if !is_admin{
+				c.IndentedJSON(http.StatusForbidden, gin.H{"error":"allowed for admins only"})
+				return
+			}
+
+
 			var updatedTask models.Task
 			
 			if err := c.BindJSON(&updatedTask); err != nil{
@@ -69,6 +94,19 @@ func UpdateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 
 func DeleteTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func (c *gin.Context){
+			is_admin, ok := c.Value("is_admin").(bool)
+			
+			if !ok{
+				c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":"unassigned context"})
+				return
+			}
+
+			if !is_admin{
+				c.IndentedJSON(http.StatusForbidden, gin.H{"error":"allowed for admins only"})
+				return
+			}
+
+
 			id := c.Param("id")
 			if err := service.DeleteTask(id); err != nil{
 				c.IndentedJSON(http.StatusNotFound, gin.H{"message: ": "Task Not Found"})
@@ -80,7 +118,7 @@ func DeleteTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 }
 
 
-func Register(service *data.PersistentTaskManagementService) gin.HandlerFunc{
+func Register(userService data.UserService) gin.HandlerFunc{
 	return func(c *gin.Context){
 
 		var newUser models.User
@@ -94,7 +132,7 @@ func Register(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 		}
 
 
-		insertedId, err :=  service.Register(newUser)
+		insertedId, err :=  userService.Register(newUser)
 		if err != nil{
 			if err.Error() == "email already exists"{
 				c.IndentedJSON(http.StatusBadRequest, gin.H{"error":err.Error()})
@@ -115,11 +153,13 @@ func Register(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 
 }
 
-type credentials struct{
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-func Login(service *data.PersistentTaskManagementService) gin.HandlerFunc{
+
+func Login(service data.UserService) gin.HandlerFunc{
+	type credentials struct{
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+
 	return func(c *gin.Context){
 		var inputCredentials credentials
 		if err := c.BindJSON(&inputCredentials); err != nil{
@@ -141,4 +181,38 @@ func Login(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 		
 		c.IndentedJSON(http.StatusOK, gin.H{"token":token})
 	}
+}
+
+
+func PromoteUser(service data.UserService) gin.HandlerFunc{
+	return func (c *gin.Context){
+		is_admin, ok := c.Value("is_admin").(bool)
+		
+		if !ok{
+			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":"unassigned context"})
+			return
+		}
+
+		if !is_admin{
+			c.IndentedJSON(http.StatusForbidden, gin.H{"error":"allowed for admins only"})
+			return
+		}
+		
+		
+		userName := c.Param("username")
+		err := service.PromoteUser(userName)
+
+		if err != nil{
+			switch err.Error(){
+			case "user not found ", "user is already an admin":
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"error":err.Error()})
+				
+			default:
+				c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
+			}
+			return
+		}
+
+		c.IndentedJSON(http.StatusAccepted, gin.H{"message":"success"})
+}
 }
