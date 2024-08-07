@@ -9,8 +9,9 @@ import (
 func main(){
 
 	r := gin.Default()
-	service := data.NewPersistentTaskManagementService()
-	router.BindRouter(r, service)
+	taskService := data.NewPersistentTaskManagementService()
+	userService := data.NewMongoDBService()
+	router.BindRouter(r, taskService, userService)
 	
 	r.Run("localhost:8080")
 }
