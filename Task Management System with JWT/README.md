@@ -27,7 +27,7 @@ The service uses the following Go dependencies:
 - You can install these dependencies by running the following command in your project directory:
 
 ```sh
-go get go.mongodb.org/mongo-driver
+go mod tidy
 ```
 # Running the API
 - Clone the repository
