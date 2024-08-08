@@ -1,5 +1,6 @@
 # Task-Manager-Api
-The Task Manager API is a RESTful API that allows users to manage tasks. The API provides endpoints that can be used to perform the CRUD operations.
+The Task Manager API is a secured RESTful API that allows users to manage tasks. The API provides secure endpoints that can be used to perform the CRUD operations on tasks. It also supports registration and logging in by using JWT authentication.
+
 
 # Requirements
 ### Go Programming Language:
@@ -12,6 +13,7 @@ The recommended version is Go 1.18 or higher.
 - The service uses MongoDB as the underlying database to store task data. You'll need to have a MongoDB server running, either locally or on a remote server.
 
 - You can download and install MongoDB from the official website: https://www.mongodb.com/try/download/community
+- Setup the connection by populating the DATABASE_URI field in the .env.template file
 
 ### Dependencies
 The service uses the following Go dependencies:
