@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	// "os"
+	"os"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
@@ -34,7 +34,7 @@ func AuthMiddleware() gin.HandlerFunc{
 			if !ok{
 				return nil, fmt.Errorf("unexpected sigining method %v", token.Header["alg"])
 			}
-			return []byte("my_secret_key"), nil 
+			return []byte(os.Getenv("SECRET_KEY")), nil 
 		}
 
 		token, err := jwt.Parse(authParts[1], keyFunc)
@@ -63,4 +63,18 @@ func AuthMiddleware() gin.HandlerFunc{
 
 		c.Next()
 	}
+}
+
+
+func AdminMiddleware() gin.HandlerFunc{
+	return func(c *gin.Context){
+		if c.Value("is_admin") != true{
+			c.IndentedJSON(http.StatusForbidden, gin.H{"error":"Allowed for admins only"})
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
+
 }
