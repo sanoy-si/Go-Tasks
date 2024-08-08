@@ -36,7 +36,7 @@ go mod tidy
 ```
 - Navigate to the project directory
 ```sh
-    cd Go-Tasks/"Task Management System with MongoDb"
+    cd Go-Tasks/"Task Management System with JWT"
 ```
 - Install dependencies
 ```sh
