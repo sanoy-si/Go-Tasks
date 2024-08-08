@@ -12,7 +12,12 @@ import (
 var validate = validator.New()
 func GetTasks(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 	return func(c *gin.Context){
-		c.IndentedJSON(http.StatusOK, service.GetTasks())
+		tasks, err := service.GetTasks()
+		if err != nil{
+			c.IndentedJSON(http.StatusInternalServerError, err)
+		}
+
+		c.IndentedJSON(http.StatusOK, tasks)
 	}
 }
 
@@ -49,8 +54,10 @@ func CreateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 				return
 			}
 
-			newTask = service.CreateTask(newTask)
-			
+			newTask, err := service.CreateTask(newTask)
+			if err != nil{
+				c.IndentedJSON(http.StatusInternalServerError, err)
+			}
 			c.IndentedJSON(http.StatusCreated, newTask)
 		}
 	
@@ -81,7 +88,13 @@ func UpdateTask(service *data.PersistentTaskManagementService) gin.HandlerFunc{
 
 			updatedTask, err := service.UpdateTask(updatedTaskid, updatedTask)
 			if err != nil{
-				c.IndentedJSON(http.StatusNotFound, gin.H{"message: ": "Task Not Found"})
+				switch err.Error(){
+				case "mongo: no documents in result":
+					c.IndentedJSON(http.StatusBadRequest, gin.H{"error":err.Error()})
+					
+				default:
+					c.IndentedJSON(http.StatusInternalServerError, gin.H{"error":err.Error()})
+				}
 				return
 			}
 
@@ -204,7 +217,7 @@ func PromoteUser(service data.UserService) gin.HandlerFunc{
 
 		if err != nil{
 			switch err.Error(){
-			case "user not found ", "user is already an admin":
+			case "user not found", "user is already an admin":
 				c.IndentedJSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 				
 			default:
@@ -213,6 +226,6 @@ func PromoteUser(service data.UserService) gin.HandlerFunc{
 			return
 		}
 
-		c.IndentedJSON(http.StatusAccepted, gin.H{"message":"success"})
+		c.IndentedJSON(http.StatusOK, gin.H{"message":"success"})
 }
 }
