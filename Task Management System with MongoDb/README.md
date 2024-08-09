@@ -16,12 +16,13 @@ The recommended version is Go 1.18 or higher.
 ### Dependencies
 The service uses the following Go dependencies:
 
-- go.mongodb.org/mongo-driver (version 1.8.0 or higher)
+- github.com/gin-gonic/gin v1.10.0
+- go.mongodb.org/mongo-driver v1.16.0
 
 - You can install these dependencies by running the following command in your project directory:
 
 ```sh
-go get go.mongodb.org/mongo-driver
+go mod tidy
 ```
 # Running the API
 - Clone the repository

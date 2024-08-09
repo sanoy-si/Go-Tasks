@@ -18,12 +18,16 @@ The recommended version is Go 1.18 or higher.
 ### Dependencies
 The service uses the following Go dependencies:
 
-- go.mongodb.org/mongo-driver (version 1.8.0 or higher)
+- github.com/dgrijalva/jwt-go v3.2.0+incompatible
+- github.com/gin-gonic/gin v1.10.0
+- github.com/go-playground/validator/v10 v10.20.0
+- go.mongodb.org/mongo-driver v1.16.0
+- golang.org/x/crypto v0.23.0
 
 - You can install these dependencies by running the following command in your project directory:
 
 ```sh
-go get go.mongodb.org/mongo-driver
+go mod tidy
 ```
 # Running the API
 - Clone the repository
@@ -32,7 +36,7 @@ go get go.mongodb.org/mongo-driver
 ```
 - Navigate to the project directory
 ```sh
-    cd Go-Tasks/"Task Management System with MongoDb"
+    cd Go-Tasks/"Task Management System with JWT"
 ```
 - Install dependencies
 ```sh
