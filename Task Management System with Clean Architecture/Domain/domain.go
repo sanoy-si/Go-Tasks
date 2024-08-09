@@ -53,10 +53,9 @@ type TaskRepository interface{
 
 type UserRepository interface{
 	Register(user User, ctx context.Context) (interface{}, error)
-	Login(username, password string, ctx context.Context) (string, error)
 	PromoteUser(username string, ctx context.Context) error
-	CountUserByUsername(username string, ctx context.Context)
-	CountUserByEmail(email string, ctx context.Context)
-	GetUserByUsername(usename string, ctx context.Context)
+	CountUserByUsername(username string, ctx context.Context) (int, error)
+	CountUserByEmail(email string, ctx context.Context) (int, error)
+	GetUserByUsername(usename string, ctx context.Context) (User, error)
 	
 }
