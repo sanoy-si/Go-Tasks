@@ -19,11 +19,6 @@ func NewUserUsecase(userRepository domain.UserRepository) *userUsecase {
 }
 
 func (uu *userUsecase) Register(user domain.User, cxt context.Context) (interface{}, error) {
-	if err := infrastructure.ValidateUser(&user); err != nil{
-		return nil, err
-	}
-
-	
 	count, err := uu.repository.CountUserByEmail(user.Email, context.TODO())
 	if err != nil{
 		return nil, err
