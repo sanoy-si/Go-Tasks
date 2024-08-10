@@ -8,17 +8,17 @@ import (
 	"github.com/sanoy-si/Task_Management_System_with_Clean_Architecture/infrastructure"
 )
 
-type userUsecase struct {
+type UserUsecase struct {
 	repository domain.UserRepository
 }
 
-func NewUserUsecase(userRepository domain.UserRepository) *userUsecase {
-	return &userUsecase{
+func NewUserUsecase(userRepository domain.UserRepository) *UserUsecase {
+	return &UserUsecase{
 		repository: userRepository,
 	}
 }
 
-func (uu *userUsecase) Register(user domain.User, cxt context.Context) (interface{}, error) {
+func (uu *UserUsecase) Register(user domain.User) (interface{}, error) {
 	count, err := uu.repository.CountUserByEmail(user.Email, context.TODO())
 	if err != nil{
 		return nil, err
@@ -47,7 +47,7 @@ func (uu *userUsecase) Register(user domain.User, cxt context.Context) (interfac
 
 	user.ID = infrastructure.GenerateID()
 	
-	count, err = uu.repository.CountAllUsers()
+	count, err = uu.repository.CountAllUsers(context.TODO())
 	if err != nil{
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (uu *userUsecase) Register(user domain.User, cxt context.Context) (interfac
 	return uu.repository.Register(user, context.TODO())
 }
 
-func (uu *userUsecase) Login(userCredentials domain.UserCredentials, cxt context.Context) (string, error) {
+func (uu *UserUsecase) Login(userCredentials domain.UserCredentials) (string, error) {
 	if err := infrastructure.ValidateUserCredentials(&userCredentials); err != nil{
 		return "", err
 	}
@@ -77,7 +77,7 @@ func (uu *userUsecase) Login(userCredentials domain.UserCredentials, cxt context
 	return infrastructure.GenerateToken(user)
 }
 
-func (uu *userUsecase) PromoteUser(username string, cxt context.Context) error {
+func (uu *UserUsecase) PromoteUser(username string) error {
 	user, err := uu.repository.GetUserByUsername(username, context.TODO())
 	if err != nil{
 		return err

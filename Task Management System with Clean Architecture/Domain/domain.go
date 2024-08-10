@@ -57,7 +57,7 @@ type UserRepository interface{
 	PromoteUser(username string, ctx context.Context) error
 	CountUserByUsername(username string, ctx context.Context) (int, error)
 	CountUserByEmail(email string, ctx context.Context) (int, error)
-	CountAllUsers()(int, error)
+	CountAllUsers(ctx context.Context)(int, error)
 	GetUserByUsername(usename string, ctx context.Context) (User, error)
 	
 }

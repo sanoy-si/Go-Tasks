@@ -10,10 +10,10 @@ type TaskUsecase struct {
 	repository domain.TaskRepository
 }
 
-func NewTaskUsecase(taskRepository domain.TaskRepository) (*TaskUsecase, error) {
+func NewTaskUsecase(taskRepository domain.TaskRepository) *TaskUsecase {
 	return &TaskUsecase{
 		repository: taskRepository,
-	}, nil
+	}
 }
 
 func (taskUsecase *TaskUsecase) GetTasks() ([]domain.Task, error) {
