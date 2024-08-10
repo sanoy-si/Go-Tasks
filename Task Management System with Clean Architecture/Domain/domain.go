@@ -9,7 +9,7 @@ type Task struct {
 	ID          string    `bson:"_id"`
 	Title       string    `json:"title" validate:"required,min=2,max=30"`
 	Description string    `json:"description"`
-	DueDate     time.Time `json:"due_date"`
+	DueDate     time.Time `json:"due_date" bson:"due_date" validate:"gt"`
 	Completed   bool      `json:"completed"`
 }
 
