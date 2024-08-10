@@ -8,61 +8,82 @@ import (
 	"github.com/sanoy-si/Task_Management_System_with_Clean_Architecture/infrastructure"
 )
 
-type UserUsecase struct {
+type userUsecase struct {
 	repository domain.UserRepository
 }
 
-func NewUserUsecase(userRepository domain.UserRepository) *UserUsecase {
-	return &UserUsecase{
+func NewUserUsecase(userRepository domain.UserRepository) *userUsecase {
+	return &userUsecase{
 		repository: userRepository,
 	}
 }
 
-func (userUsecase *UserUsecase) Register(user domain.User, cxt context.Context) (interface{}, error) {
+func (uu *userUsecase) Register(user domain.User, cxt context.Context) (interface{}, error) {
+	if err := infrastructure.ValidateUser(&user); err != nil{
+		return nil, err
+	}
+
+	
+	count, err := uu.repository.CountUserByEmail(user.Email, context.TODO())
+	if err != nil{
+		return nil, err
+	}
+	
+	if count > 0{
+		return nil, errors.New("email already exists")
+	}
+	
+	
+	count, err = uu.repository.CountUserByUsername(user.UserName, context.TODO())
+	if err != nil{
+		return nil, err
+	}
+	
+	if count > 0{
+		return nil, errors.New("username already exists")
+	}
+
+
 	hashedPassword, err := infrastructure.HashPassword(user.Password)
 	if err != nil{
 		return nil, err
 	}
 	user.Password = hashedPassword
 
-	count, err := userUsecase.repository.CountUserByEmail(user.Email, context.TODO())
-	if err != nil{
-		return nil, err
-	}
-
-	if count > 0{
-		return nil, errors.New("Email already exists")
-	}
-
+	user.ID = infrastructure.GenerateID()
 	
-	count, err = userUsecase.repository.CountUserByUsername(user.UserName, context.TODO())
+	count, err = uu.repository.CountAllUsers()
 	if err != nil{
 		return nil, err
 	}
-
-	if count > 0{
-		return nil, errors.New("Username already exists")
+	
+	if count == 0{
+		user.IsAdmin = true
 	}
 
 
-	return userUsecase.repository.Register(user, context.TODO())
+	return uu.repository.Register(user, context.TODO())
 }
 
-func (userUsecase *UserUsecase) Login(username, password string, cxt context.Context) (string, error) {
-	user, err := userUsecase.repository.GetUserByUsername(username, context.TODO())
+func (uu *userUsecase) Login(userCredentials domain.UserCredentials, cxt context.Context) (string, error) {
+	if err := infrastructure.ValidateUserCredentials(&userCredentials); err != nil{
+		return "", err
+	}
+
+	user, err := uu.repository.GetUserByUsername(userCredentials.UserName, context.TODO())
 	if err != nil{
 		return "", err
 	}
 
-	if !infrastructure.ComparePassword(password, user.Password){
-		return "", errors.New("Incorrect username or password")
+	if !infrastructure.ComparePassword(userCredentials.Password, user.Password){
+		return "", errors.New("incorrect username or password")
 	}
 
 	return infrastructure.GenerateToken(user)
 }
 
-func (userUsecase *UserUsecase) PromoteUser(username string, cxt context.Context) error {
-	user, err := userUsecase.repository.GetUserByUsername(username, context.TODO())
+func (uu *userUsecase) PromoteUser(username string, cxt context.Context) error {
+	user, err := uu.repository.GetUserByUsername(username, context.TODO())
 	if err != nil{
 		return err
 	}
@@ -72,5 +93,5 @@ func (userUsecase *UserUsecase) PromoteUser(username string, cxt context.Context
 	}
 
 	
-	return userUsecase.repository.PromoteUser(username, context.TODO())
+	return uu.repository.PromoteUser(username, context.TODO())
 }
