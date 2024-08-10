@@ -32,7 +32,7 @@ func getEnvPath() string{
 		log.Fatal(err.Error())
 	}
 
-	envPath := filepath.Join(filepath.Dir(cwd), ".env.template")
+	envPath := filepath.Join(filepath.Dir(cwd), ".env.example")
 
 	return envPath
 }
