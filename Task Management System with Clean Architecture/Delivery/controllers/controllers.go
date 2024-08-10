@@ -25,7 +25,7 @@ func CreateTask(taskUsecase domain.TaskUsecase) gin.HandlerFunc {
 			c.IndentedJSON(http.StatusInternalServerError, err)
 		}
 
-		c.IndentedJSON(http.StatusOK, newTask)
+		c.IndentedJSON(http.StatusCreated, newTask)
 	}
 }
 
