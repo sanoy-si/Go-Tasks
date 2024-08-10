@@ -11,11 +11,11 @@ import (
 
 
 type TaskRepository struct{
-	database mongo.Database
+	database *mongo.Database
 	collection string
 }
 
-func NewTaskRepository(db mongo.Database, collection string) *TaskRepository{
+func NewTaskRepository(db *mongo.Database, collection string) *TaskRepository{
 	return &TaskRepository{
 		database: db,
 		collection: collection,
