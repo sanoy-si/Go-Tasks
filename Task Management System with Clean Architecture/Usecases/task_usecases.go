@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/sanoy-si/Task_Management_System_with_Clean_Architecture/domain"
+	"github.com/sanoy-si/Task_Management_System_with_Clean_Architecture/infrastructure"
 )
 
 type TaskUsecase struct {
@@ -25,6 +26,7 @@ func (taskUsecase *TaskUsecase) GetTaskByID(id string) (domain.Task, error) {
 }
 
 func (taskUsecase *TaskUsecase) CreateTask(newTask domain.Task) (domain.Task, error) {
+	newTask.ID = infrastructure.GenerateID()
 	return taskUsecase.repository.CreateTask(newTask, context.TODO())
 }
 
