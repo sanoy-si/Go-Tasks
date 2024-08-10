@@ -50,7 +50,7 @@ func (tr *TaskRepository) GetTasks(ctx context.Context) ([]domain.Task, error) {
 
 func (tr *TaskRepository) GetTaskByID(id string, ctx context.Context)(domain.Task, error){
 	collection := tr.database.Collection(tr.collection)
-	filter := bson.M{"id":id}
+	filter := bson.M{"_id":id}
 	
 	var task domain.Task
 	err := collection.FindOne(ctx, filter).Decode(&task)
@@ -75,12 +75,12 @@ func (tr *TaskRepository) CreateTask(newTask domain.Task, ctx context.Context) (
 func (tr *TaskRepository) UpdateTask(id string, updatedTask domain.Task, ctx context.Context) (domain.Task, error){
 	collection := tr.database.Collection(tr.collection)
 
-	filter := bson.M{"id": id}
 	_, err := tr.GetTaskByID(id, ctx)
 	if err != nil{
 		return domain.Task{}, err
-	} 
-
+		} 
+		
+	filter := bson.M{"__id": id}
 	update := bson.M{"$set": bson.M{
 		"title": updatedTask.Title,
 		"description": updatedTask.Description,
@@ -93,13 +93,13 @@ func (tr *TaskRepository) UpdateTask(id string, updatedTask domain.Task, ctx con
 		return domain.Task{}, err
 	}
 
-	return updatedTask, nil
+	return tr.GetTaskByID(id, ctx)
 }
 
 
 func (tr *TaskRepository) DeleteTask(id string, ctx context.Context) error{
 	collection := tr.database.Collection(tr.collection)
-	filter := bson.M{"id": id}
+	filter := bson.M{"_id": id}
 	deleteResult, err := collection.DeleteMany(context.TODO(), filter)
 
 	if err != nil{
