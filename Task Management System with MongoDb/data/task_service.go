@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type TaskMangemetService interface{
+type TaskMangemetService interface {
 	GetTasks() []models.Task
 	GetTask(id string) (models.Task, error)
 	CreateTask(newTask models.Task) models.Task
@@ -22,16 +22,23 @@ type TaskMangemetService interface{
 	DeleteTask(id string) error
 }
 
-type PersistentTaskManagementService struct{
+type PersistentTaskManagementService struct {
 	client *mongo.Client
-
 }
 
-func NewPersistentTaskManagementService() *PersistentTaskManagementService{
+func NewPersistentTaskManagementService() *PersistentTaskManagementService {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
-	if err != nil{
+	idCounterCollection := client.Database("task_manager").Collection("counter")
+	if count, err := idCounterCollection.CountDocuments(context.TODO(), bson.D{}); err != nil {
+		log.Fatal(err.Error())
+
+	} else if count == 0 {
+		idCounterCollection.InsertOne(context.TODO(), bson.M{"current_id": 1})
+	}
+
+	if err != nil {
 		log.Fatal("Couldn't Connet to the databse.", err)
 	}
 
@@ -40,28 +47,27 @@ func NewPersistentTaskManagementService() *PersistentTaskManagementService{
 	}
 }
 
-
-func (service *PersistentTaskManagementService) GetTasks() []models.Task{
+func (service *PersistentTaskManagementService) GetTasks() []models.Task {
 	collection := service.client.Database("task_manager").Collection("tasks")
-	
+
 	cursor, err := collection.Find(context.TODO(), bson.M{})
-	
-	if err != nil{
+
+	if err != nil {
 		defer log.Fatal(err)
 		return []models.Task{}
 	}
-	
+
 	allTasks := []models.Task{}
 
-	for cursor.Next(context.TODO()){
+	for cursor.Next(context.TODO()) {
 		var task models.Task
 		err := cursor.Decode(&task)
 
-		if err != nil{
+		if err != nil {
 			defer log.Fatal(err)
 			return []models.Task{}
 		}
-		
+
 		allTasks = append(allTasks, task)
 
 	}
@@ -69,55 +75,57 @@ func (service *PersistentTaskManagementService) GetTasks() []models.Task{
 	return allTasks
 }
 
-func (service *PersistentTaskManagementService) GetTask(id string) (models.Task, error){
+func (service *PersistentTaskManagementService) GetTask(id string) (models.Task, error) {
 	collection := service.client.Database("task_manager").Collection("tasks")
-	filter := bson.M{"id":id}
-	
+	filter := bson.M{"id": id}
+
 	var task models.Task
 	err := collection.FindOne(context.TODO(), filter).Decode(&task)
-	if err != nil{
+	if err != nil {
 		return models.Task{}, err
 	}
 
 	return task, nil
 }
 
-func (service *PersistentTaskManagementService) CreateTask(newTask models.Task) models.Task{
-	collection := service.client.Database("task_manager").Collection("tasks")
-	insertResult, err := collection.InsertOne(context.TODO(), newTask)
+func (service *PersistentTaskManagementService) CreateTask(newTask models.Task) models.Task {
+	type Counter struct{
+		CurrentID int `bson:"current_id"`
+	}
 
-	if err != nil{
-		log.Fatal(err)
-	}
-	count, err := collection.CountDocuments(context.TODO(), bson.M{})
-	if err != nil{
-		log.Fatal(err)
-	}
-	filter := bson.M{"_id": insertResult.InsertedID}
-	update := bson.M{"$set": bson.M{"id": strconv.Itoa(int(count))}}
+	counter := Counter{}
 	
-	_, err = collection.UpdateOne(context.TODO(), filter, update)
-	if err != nil{
+	idCollection := service.client.Database("task_manager").Collection("counter")
+	update := bson.M{"$inc": bson.M{"current_id": 1}}
+
+	if err := idCollection.FindOneAndUpdate(context.TODO(), bson.M{}, update).Decode(&counter); err != nil {
+		log.Fatal(err.Error())
+	}
+
+	newTask.ID = strconv.Itoa(counter.CurrentID)
+	collection := service.client.Database("task_manager").Collection("tasks")
+	_, err := collection.InsertOne(context.TODO(), newTask)
+
+	if err != nil {
 		log.Fatal(err)
 	}
-	
-	newTask.ID = strconv.Itoa(int(count))
+
 	return newTask
 }
 
-func (service *PersistentTaskManagementService) UpdateTask(id string, updatedTask models.Task) (models.Task, error){
+func (service *PersistentTaskManagementService) UpdateTask(id string, updatedTask models.Task) (models.Task, error) {
 	collection := service.client.Database("task_manager").Collection("tasks")
 	filter := bson.M{"id": id}
 	update := bson.M{"$set": bson.M{
-		"id": id,
-		"title": updatedTask.Title,
+		"id":          id,
+		"title":       updatedTask.Title,
 		"description": updatedTask.Description,
-		"due_date": updatedTask.DueDate,
-		"status": updatedTask.Status,
+		"due_date":    updatedTask.DueDate,
+		"status":      updatedTask.Status,
 	}}
 
 	_, err := collection.UpdateOne(context.TODO(), filter, update)
-	if err != nil{
+	if err != nil {
 		return models.Task{}, err
 	}
 
@@ -125,55 +133,54 @@ func (service *PersistentTaskManagementService) UpdateTask(id string, updatedTas
 	return updatedTask, nil
 }
 
-func (service *PersistentTaskManagementService) DeleteTask(id string) error{
+func (service *PersistentTaskManagementService) DeleteTask(id string) error {
 	collection := service.client.Database("task_manager").Collection("tasks")
 	filter := bson.M{"id": id}
 	deleteResult, err := collection.DeleteMany(context.TODO(), filter)
 
 	fmt.Println(deleteResult.DeletedCount)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
-	if deleteResult.DeletedCount == 0{
+	if deleteResult.DeletedCount == 0 {
 		return errors.New("task not found")
 	}
 
 	return nil
 }
 
-
-type inMemoryTaskManagementService struct{
-	tasks map[string]models.Task
+type inMemoryTaskManagementService struct {
+	tasks     map[string]models.Task
 	currentId string
 }
 
-func NewInMemoryTaskManagementService() *inMemoryTaskManagementService{
+func NewInMemoryTaskManagementService() *inMemoryTaskManagementService {
 	return &inMemoryTaskManagementService{
-		tasks: make(map[string]models.Task),
+		tasks:     make(map[string]models.Task),
 		currentId: "1",
 	}
 }
 
-func (service *inMemoryTaskManagementService) GetTasks() []models.Task{
-	allTasks := []models.Task{} 
-	for _, task := range service.tasks{
-		allTasks = append(allTasks, task) 
-	} 
+func (service *inMemoryTaskManagementService) GetTasks() []models.Task {
+	allTasks := []models.Task{}
+	for _, task := range service.tasks {
+		allTasks = append(allTasks, task)
+	}
 	return allTasks
 }
 
-func (service *inMemoryTaskManagementService) GetTask(id string) (models.Task, error){
+func (service *inMemoryTaskManagementService) GetTask(id string) (models.Task, error) {
 	task, exists := service.tasks[id]
 
-	if !exists{
+	if !exists {
 		return models.Task{}, errors.New("task not found")
 	}
 
 	return task, nil
 }
 
-func (service *inMemoryTaskManagementService) CreateTask(newTask models.Task) models.Task{
+func (service *inMemoryTaskManagementService) CreateTask(newTask models.Task) models.Task {
 	newTask.ID = service.currentId
 	service.tasks[service.currentId] = newTask
 	curentId, _ := strconv.Atoi(service.currentId)
@@ -181,9 +188,9 @@ func (service *inMemoryTaskManagementService) CreateTask(newTask models.Task) mo
 	return newTask
 }
 
-func (service *inMemoryTaskManagementService) UpdateTask(id string, updatedTask models.Task) (models.Task, error){
+func (service *inMemoryTaskManagementService) UpdateTask(id string, updatedTask models.Task) (models.Task, error) {
 	_, err := service.GetTask(id)
-	if err != nil{
+	if err != nil {
 		return models.Task{}, err
 	}
 
@@ -193,10 +200,10 @@ func (service *inMemoryTaskManagementService) UpdateTask(id string, updatedTask 
 	return updatedTask, nil
 }
 
-func (service *inMemoryTaskManagementService) DeleteTask(id string) error{
+func (service *inMemoryTaskManagementService) DeleteTask(id string) error {
 	_, exists := service.tasks[id]
 
-	if !exists{
+	if !exists {
 		return errors.New("task not found")
 	}
 
@@ -204,6 +211,3 @@ func (service *inMemoryTaskManagementService) DeleteTask(id string) error{
 
 	return nil
 }
-
-
-
